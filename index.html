@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Galactic Team Creator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Rubik:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>
+      <span role="img" aria-label="stars">✨</span>
+      Galactic Team Creator
+      <span role="img" aria-label="rocket">🚀</span>
+    </h1>
+    <form id="teamForm" class="form" novalidate>
+      <div class="input-row">
+        <label>
+          Number of teams:
+          <input type="number" id="numTeams" min="2" max="10" value="2" required />
+        </label>
+        <label>
+          Players per team:
+          <input type="number" id="playersPerTeam" min="1" max="15" value="3" required />
+        </label>
+      </div>
+      <label>
+        Player Names (comma or newline separated):
+        <textarea id="playerNames" placeholder="Alice, Bob, Charlie, Dave..." required></textarea>
+      </label>
+      <button type="submit">Create Teams</button>
+    </form>
+    <div id="error" class="error" role="alert" aria-live="assertive"></div>
+    <div class="teams" id="teamsContainer" aria-live="polite" aria-relevant="additions"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('teamForm');
+    const numTeamsInput = document.getElementById('numTeams');
+    const playersPerTeamInput = document.getElementById('playersPerTeam');
+    const playerNamesInput = document.getElementById('playerNames');
+    const errorDiv = document.getElementById('error');
+    const teamsContainer = document.getElementById('teamsContainer');
+
+    function shuffleArray(array) {
+      for (let i = array.length -1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i +1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      errorDiv.textContent = '';
+      teamsContainer.innerHTML = '';
+
+      const numTeams = parseInt(numTeamsInput.value, 10);
+      const playersPerTeam = parseInt(playersPerTeamInput.value, 10);
+      let names = playerNamesInput.value
+        .split(/[\n,]+/)
+        .map(name => name.trim())
+        .filter(Boolean);
+
+      if (names.length < numTeams * playersPerTeam) {
+        errorDiv.textContent = `You need at least ${numTeams * playersPerTeam} players for ${numTeams} teams of ${playersPerTeam}.`;
+        return;
+      }
+
+      names = shuffleArray(names);
+
+      const teams = Array.from({ length: numTeams }, (_, i) => ({
+        name: `Team ${i + 1}`,
+        players: [],
+      }));
+
+      for (let i = 0; i < numTeams * playersPerTeam; i++) {
+        const teamIndex = i % numTeams;
+        teams[teamIndex].players.push(names[i]);
+      }
+
+      // Build the teams display
+      if (teams.length > 0) {
+        const title = document.createElement('h2');
+        title.innerHTML = '🏆 Teams';
+        teamsContainer.appendChild(title);
+
+        const cardsWrapper = document.createElement('div');
+        cardsWrapper.className = 'team-cards';
+
+        teams.forEach(team => {
+          const card = document.createElement('section');
+          card.className = 'team-card';
+          card.setAttribute('aria-label', team.name);
+
+          const teamName = document.createElement('div');
+          teamName.className = 'team-name';
+          teamName.innerHTML = '🪐 ' + team.name;
+          card.appendChild(teamName);
+
+          const playerList = document.createElement('ul');
+          team.players.forEach(player => {
+            const li = document.createElement('li');
+            li.innerHTML = '⭐️ ' + player;
+            playerList.appendChild(li);
+          });
+
+          card.appendChild(playerList);
+          cardsWrapper.appendChild(card);
+        });
+
+        teamsContainer.appendChild(cardsWrapper);
+      }
+    });
+  </script>
+</body>
+</html>
